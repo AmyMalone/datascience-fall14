@@ -1,0 +1,70 @@
+create or replace function xml_gold()
+returns text as $name$
+declare 
+
+r record;
+to_ret text :='';
+c integer;
+m integer := 0;   
+
+
+begin
+
+   for r in (
+     with playUSA as(
+          select events.event_id, count(players.player_id) as count
+          from events  
+          inner join players  on results.player_id = players.player_id
+          inner join results on results.event_id = events.event_id 
+          where players.country_id = 'USA' and events.olympic_id = 'ATH2004' 
+          and results.medal like '%GOLD%' group by events.event_id
+      ),   
+
+      athEv as(
+          select events.name as ev_nm, name, medal, player_id
+          from (select * from events where olympic_id like '%ATH2004%')  ev 
+          inner join (select * from results where medal like '%GOLD%')  res
+	  on res.event_id = ev.event_id   
+     )
+     select athEv.name, players.name as pl_name, playUSA.count
+     from athEv inner join playUSA on playUSA.event_id = athEv.event_id
+                inner join players on players.player_id = athEv.player_id where country_id = 'USA' order by athEv.ev_nm  
+
+               
+   )
+       
+   loop   
+    if m := 0 then  
+       m := playUSA.count;    
+    end if;     
+
+
+    if m = playUSA.count then 
+       to_ret := to_ret||'<medal>'||E'\n';
+       to_ret := to_ret||'    <event>'||r.ev_nm||'</event>'||E'\n';  
+     end if;
+
+    if playUSA.count = 1 then  
+       to_ret := to_ret||'    <player>'||r.pl_name||'</player>'||E'\n'; 
+    end if;  
+
+    if playUSA.count>1 and m>1 and playUSA.count = m then
+       to_ret := to_ret||'    <players>'||E'\n';    
+       to_ret := to_ret||'        <player>'||r.pl_name||'</player>'||E'\n';
+    else if playUSA.count > 1 and m = 1 then   
+       to_ret := to_ret||'        <player>'||r.pl_name||'</player>'||E'\n'; 
+       to_ret := to_ret||'    </players>'||E'\n'; 
+    end if  
+
+    if m = 1 then 
+       to_ret := to_ret||'</medal>'||E'\n';                                           
+    end if;
+
+    m := (m-1);  
+
+   end loop;
+return to_ret;
+end;
+$name$ language plpgsql;
+
+

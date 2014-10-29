@@ -1,0 +1,9 @@
+In deduplicating the file, I compared the titles, the manufacturer, and the price.
+For title and munufacturer, I did not use a custom comparator, as I wanted the fields to match exactly,
+as the string comparator would do automatically. For price, I created a custom comparator that returned
+true if the price were within 20% of each other.
+
+With my algorithm, I got 289 duplicates with a precision of 52.6% and a recall of 11.69%.
+This meant that many of my matches were relevant, but not very many of the possible matches
+I could have found I found. Recall could be inproved if I had included the descriptions, or
+If I parsed the Google data more closely to ensure that the manufacturer was in the correct place.

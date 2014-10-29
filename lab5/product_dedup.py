@@ -43,11 +43,24 @@ training_file = 'products_training.json'
 # Here you need to define any custom comparison functions you may use for different fields
 
 def customComparator(field_1, field_2) :
-    if field_1 and field_2 :
-        if field_1 == field_2 :
+    
+    l1 = field_1.split()
+    l2 = field_2.split()     
+
+    if l1[0] and l2[0] :
+        if l1[0] == l2[0] :
             return 1
         else:
-            return 0
+	    n1 = float(l1[0])
+            n2 = float(l2[0])
+            if n1!= 0:  
+	    	top = ((n1-n2)/n1)
+            	top = top*100
+            	if(top<20 or top>-20): 
+                    return 1
+            	else:             
+	    	    return 0
+   	return 0 
     else :
         return nan
 
@@ -96,6 +109,7 @@ else:
     # to be used and specify any customComparators. Please read the dedupe manual for details
     fields = [
         {'field' : 'title', 'type': 'String'},
+	{'field' : 'manufacturer', 'type': 'String', 'has missing':True}, 
         {'field' : 'price', 'type': 'Custom', 'has missing':True, 'comparator' : customComparator}
         ]
 
@@ -150,7 +164,7 @@ print 'blocking...'
 # If we had more data, we would not pass in all the blocked data into
 # this function but a representative sample.
 
-threshold = deduper.threshold(data_d, recall_weight=2)
+threshold = deduper.threshold(data_d, recall_weight=1)
 
 # `match` will return sets of record IDs that dedupe
 # believes are all referring to the same entity.
