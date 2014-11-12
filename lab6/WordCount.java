@@ -2,7 +2,7 @@ package org.myorg;
 
 	import java.io.IOException;
 	import java.util.*;
-	
+ 	import java.lang.*; 	
 	import org.apache.hadoop.fs.Path;
 	import org.apache.hadoop.conf.*;
 	import org.apache.hadoop.io.*;
@@ -18,11 +18,22 @@ package org.myorg;
             public void map(LongWritable key, Text value, OutputCollector output, Reporter reporter) throws IOException {
                 String line = value.toString();
                 StringTokenizer tokenizer = new StringTokenizer(line);
-                while (tokenizer.hasMoreTokens()) {
-                    word.set(tokenizer.nextToken());
-                    output.collect(word, one);
-                }
-            }
+		Text last = null;
+		Text space = new Text (" "); 
+		while (tokenizer.hasMoreTokens()) {
+		    Text cur = new Text(tokenizer.nextToken());   
+		    if(last!=null){
+                    
+			word.append(last.getBytes(), 0, last.getLength()-1);  
+			word.append(space.getBytes(), 0, space.getLength()-1);  
+			word.append(cur.getBytes(), 0, cur.getLength()-1);  
+			output.collect(word, one);
+                    }  
+                    last = new Text(cur);   
+		}
+            
+
+	    }
         }
 	
         public static class Reduce extends MapReduceBase implements Reducer<Text, IntWritable, Text, IntWritable> {
